@@ -8,9 +8,9 @@
 # Original Author: Jean-Roch COULON (jean-roch.coulon@thalesgroup.fr)
 
 if ! [ -n "$ARCH_TEST_REPO" ]; then
-  ARCH_TEST_REPO=https://github.com/riscv-non-isa/riscv-arch-test
-  ARCH_TEST_BRANCH=riscof-dev
-  ARCH_TEST_HASH=7907c462c700279c5d75ec5e6042f762dcb95a25
+  ARCH_TEST_REPO=git@github.com:10x-Engineers/riscv-arch-test.git
+  ARCH_TEST_BRANCH=bitmanip-regress
+  ARCH_TEST_HASH=327ca7cb053db1ca4ea002b735510626a16021c1
 fi
 echo $ARCH_TEST_REPO
 echo $ARCH_TEST_BRANCH

@@ -35,9 +35,9 @@ export NUM_JOBS=24
 
 # install the required tools for cva6
 if ! [ -n "$CVA6_REPO" ]; then
-  CVA6_REPO="https://github.com/openhwgroup/cva6.git"
-  CVA6_BRANCH="master"
-  CVA6_HASH="34f63b44873148d371133bfa8642d2b7d388f39b"
+  CVA6_REPO="git@github.com:10x-Engineers/cva6.git"
+  CVA6_BRANCH="bitmanip_dev"
+  CVA6_HASH="085b8b2ad3bc204ff37d60650377f6bae25ed41a"
   CVA6_PATCH=
 fi
 echo $CVA6_REPO
