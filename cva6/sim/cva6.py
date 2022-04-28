@@ -100,7 +100,7 @@ def parse_iss_yaml(iss, iss_yaml, isa, target, setting_dir, debug_cmd):
   for entry in yaml_data:
     if entry['iss'] == iss:
       logging.info("Found matching ISS: %s" % entry['iss'])
-      m = re.search(r"rv(?P<xlen>[0-9]+?)(?P<variant>[a-z]+?)$", isa)
+      m = re.search(r"rv(?P<xlen>[0-9]+?)(?P<variant>[a-z]+?)_zba_zbb_zbc_zbs$", isa)
       if m: logging.info("ISA %0s" % isa)
       else: logging.error("Illegal ISA %0s" % isa)
 
@@ -875,7 +875,7 @@ def load_config(args, cwd):
       args.testlist = cwd + "/target/"+ args.target +"/testlist.yaml"
     if args.target == "cv64a6_imafdc_sv39":
       args.mabi = "lp64"
-      args.isa  = "rv64gc"
+      args.isa  = "rv64imafdc_zba_zbb_zbc_zbs"
     elif args.target == "cv32a6_imac_sv0":
       args.mabi = "ilp32"
       args.isa  = "rv32imac"
