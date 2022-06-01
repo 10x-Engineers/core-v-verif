@@ -37,7 +37,7 @@ export NUM_JOBS=24
 if ! [ -n "$CVA6_REPO" ]; then
   CVA6_REPO="git@github.com:10x-Engineers/cva6.git"
   CVA6_BRANCH="bitmanip_dev"
-  CVA6_HASH="085b8b2ad3bc204ff37d60650377f6bae25ed41a"
+  CVA6_HASH="f6318c09adb60edcfca951831704eb855b04d322"
   CVA6_PATCH=
 fi
 echo $CVA6_REPO
