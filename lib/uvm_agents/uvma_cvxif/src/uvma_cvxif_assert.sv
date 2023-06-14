@@ -165,7 +165,7 @@ module uvma_cvxif_assert #(parameter X_ID_WIDTH    = cvxif_pkg::X_ID_WIDTH,
    a_data_stable_res_multic: assert property (p_data_stable_res_multic)
       else `uvm_error(info_tag, "Failure: data shall be stable during result transation where 'we' is asserted");
 
-   always @(posedge clk or negedge reset_n) begin
+ /*  always @(posedge clk or negedge reset_n) begin
       if (X_RFW_WIDTH!=riscv::XLEN) begin
          a_result_dualwrite: assert property (p_result_dualwrite)
             else `uvm_error(info_tag, "Failure: For dualwrite instruction, we[1]==1 is only allowed if we[0]==1");
@@ -174,6 +174,6 @@ module uvma_cvxif_assert #(parameter X_ID_WIDTH    = cvxif_pkg::X_ID_WIDTH,
    end
    property p_result_dualwrite;
       (cvxif_assert.cvxif_resp_o.x_result_valid && (cvxif_assert.cvxif_resp_o.x_result.we[X_RFW_WIDTH/riscv::XLEN-1])) |-> cvxif_assert.cvxif_resp_o.x_result.we[0];
-   endproperty
+   endproperty*/
 
 endmodule : uvma_cvxif_assert

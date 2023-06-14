@@ -34,6 +34,7 @@ class uvma_axi_seq_item_logger_c extends uvml_logs_seq_item_logger_c #(
    /**
     * Writes contents of t to disk.
     */
+   /*
    virtual function void write(uvma_axi_base_seq_item_c trs);
       if(cntxt.reset_state == UVMA_AXI_RESET_STATE_POST_RESET)begin
 
@@ -173,6 +174,7 @@ class uvma_axi_seq_item_logger_c extends uvml_logs_seq_item_logger_c #(
          end
       end
    endfunction : write
+   */
 
 // A significant chunk of the write_mstr method is common between this
 // sequence item logger and the monitor transaction logger.  Given that

@@ -11,7 +11,7 @@
 `define __UVME_CVXIF_VSEQ_SV__
 
 
-class uvme_cvxif_vseq_c extends uvme_cvxif_base_vseq_c#(uvma_cvxif_resp_item_c);
+class uvme_cvxif_vseq_c extends uvme_cvxif_base_vseq_c;
 
    `uvm_object_utils (uvme_cvxif_vseq_c)
    `uvm_declare_p_sequencer (uvma_cvxif_vsqr_c)

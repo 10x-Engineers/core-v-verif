@@ -17,7 +17,7 @@ export CVA6_TB_DIR   = $(root-dir)/../tb/core
 export CORE_V_VERIF  = $(root-dir)/../..
 endif
 ifndef TARGET_CFG
-export TARGET_CFG = $(target)
+export TARGET_CFG = cv64a6_imafdc_sv39
 endif
 
 .DEFAULT_GOAL := help
@@ -101,7 +101,7 @@ endif
 # Spike specific commands, variables
 ###############################################################################
 spike:
-	$(tool_path)/spike --log-commits --isa=$(variant) -l $(elf)
+	spike --log-commits --isa=$(variant) -l $(elf)
 	cp $(log).iss $(log)
 
 ###############################################################################
@@ -130,6 +130,7 @@ veri-testharness:
 ###############################################################################
 ALL_VCS_FLAGS           = $(if $(VERDI), -kdb -debug_access+all -lca,) -sverilog -full64 -timescale=1ns/1ns
 VCS_WORK_DIR            = $(CORE_V_VERIF)/cva6/sim/vcs_results/default/vcs.d
+XCELIUM_WORK_DIR        = $(CORE_V_VERIF)/cva6/sim/xcelium_results/default/xcelium.d
 SIMV                    = $(VCS_WORK_DIR)/simv
 
 export CVA6_UVMT_DIR          = $(CORE_V_VERIF)/cva6/tb/uvmt
@@ -171,6 +172,29 @@ ALL_UVM_FLAGS           = -lca -sverilog +incdir+$(VCS_HOME)/etc/uvm/src \
 	  +incdir+$(CORE_V_VERIF)/$(CV_CORE_LC)/env/uvme +incdir+$(CORE_V_VERIF)/$(CV_CORE_LC)/tb/uvmt \
 	  $(if $(DEBUG), -debug_access+all $(if $(VERDI), -kdb) $(if $(TRACE_COMPACT),+vcs+fsdbon))
 
+ALL_UVM_FLAGS_XCELIUM  ?= -64bit \
+					-disable_sem2009 \
+					-access +rwc \
+                    -nowarn UEXPSC \
+					-lwdgen \
+                    -sv \
+					-uvm \
+					-uvmhome CDNS-1.2-ML \
+                    -timescale 1ns/1ps \
+					+UVM_VERBOSITY=UVM_MEDIUM \
+					+define+UVM \
+					+define+CVA6_ASSERT_ON \
+					-nowarn UEXPSC \
+					-nowarn DLCPTH \
+					-nowarn COVMCP \
+					-neverwarn \
+
+# ALL_UVM_FLAGS_XCELIUM   = -lca -sv +incdir+$(XCELIUMHOME)/tools/etc/uvm/src \
+# 	  $(XCELIUMHOME)/tools/etc/uvm/src/uvm_pkg.sv +UVM_VERBOSITY=UVM_MEDIUM uvm-1.2 -timescale 1ns/1ps \
+# 	  -assert svaext  unique_checks -64bit -q +incdir+$(VCS_HOME)/etc/uvm/src \
+# 	  +incdir+$(CORE_V_VERIF)/$(CV_CORE_LC)/env/uvme +incdir+$(CORE_V_VERIF)/$(CV_CORE_LC)/tb/uvmt \
+# 	  $(if $(DEBUG), -debug_access+all $(if $(VERDI), -kdb) $(if $(TRACE_COMPACT),+vcs+fsdbon))
+
 ALL_SIMV_UVM_FLAGS      = -licwait 20 +ntb_random_seed=1 \
 		-sv_lib $(CORE_V_VERIF)/lib/dpi_dasm/lib/Linux64/libdpi_dasm +signature=I-ADD-01.signature_output \
 		+UVM_TESTNAME=uvmt_cva6_firmware_test_c
@@ -201,7 +225,59 @@ dpi_build:
 	-o $(dpi-library)/elfloader.o
 	g++ -shared -m64 -o $(dpi-library)/ariane_dpi.so $(dpi-library)/elfloader.o -L$(RISCV)/lib -Wl,-rpath,$(RISCV)/lib
 
-vcs_uvm_comp: dpi_build
+# export SPIKE_ROOT=/root/Documents/core-v-verif/tools/spike
+# export RISCV=/root/Cadence/Install/riscv64-unknown-elf-gcc-8.3.0-2020.04.1-x86_64-linux-centos6
+dpi-library-xcelium = $(XCELIUM_WORK_DIR)/work-dpi
+dpi_build_xcelium:
+	mkdir -p $(dpi-library-xcelium)
+	g++ -shared -fPIC -std=c++0x -Bsymbolic -std=c++11 -I../corev_apu/tb/dpi -O3 -I$(SPIKE_ROOT)/include \
+	-I$(XCELIUMHOME)/tools/include -I$(RISCV)/include -c $(CVA6_REPO_DIR)/corev_apu/tb/dpi/elfloader.cc \
+	-o $(dpi-library-xcelium)/elfloader.o
+	g++ -shared -m64 -o $(dpi-library-xcelium)/ariane_dpi.so $(dpi-library-xcelium)/elfloader.o -L$(RISCV)/lib -Wl,-rpath,$(RISCV)/lib
+
+# xrun_uvm_comp: dpi_build_xcelium
+# 	@echo "[XCELIUM] Building Model"
+# 	mkdir -p $(XCELIUM_WORK_DIR)
+# 	cd $(XCELIUM_WORK_DIR) && xrun $(ALL_UVM_FLAGS_XCELIUM) \
+# 	  -f $(CVA6_UVMT_DIR)/uvmt_cva6.flist 
+# 	#   $(cov-comp-opt) +define+UNSUPPORTED_WITH+ $(isscomp_opts)\
+# 	#   -top uvmt_cva6_tb
+# 	#   -f $(FLIST_CORE) -f $(FLIST_TB) \
+# 	#   ${CVA6_UVMT_DIR}/uvmt_cva6_pkg.sv \
+
+xrun_uvm_comp: dpi_build_xcelium
+	@echo "[XCELIUM] Building Model"
+	mkdir -p $(XCELIUM_WORK_DIR)
+	cd $(XCELIUM_WORK_DIR) && xrun $(ALL_UVM_FLAGS_XCELIUM) \
+	  -f $(FLIST_CORE) -f $(FLIST_TB) \
+	  -f $(CVA6_UVMT_DIR)/uvmt_cva6.flist \
+	  ++$(elf) \
+	  -sv_lib /root/Documents/core-v-verif/cva6/sim//../../lib/dpi_dasm/lib/Linux64/libdpi_dasm \
+	  -sv_lib $(dpi-library-xcelium)/ariane_dpi \
+	  $(cov-comp-opt)  $(isscomp_opts)\
+	  +tohost_addr=$(shell $$RISCV/bin/riscv64-unknown-elf-nm -B $(elf) | grep -w tohost | cut -d' ' -f1) \
+	  +PRELOAD=$(elf) +permissive-off ++$(elf)\
+	  -top uvmt_cva6_tb
+
+xrun_uvm_run:
+	$(if $(TRACE_FAST), unset VERDI_HOME ;) \
+	cd $(XCELIUM_WORK_DIR)/ && \
+	xrun -xmlibdirname $(XCELIUM_WORK_DIR)/ \
+	-top uvmt_cva6_tb \
+	
+
+# xrun_uvm_comp: dpi_build_xcelium
+# 	@echo "[XCELIUM] Building Model"
+# 	mkdir -p $(XCELIUM_WORK_DIR)
+# 	cd $(XCELIUM_WORK_DIR) && xrun -64bit -disable_sem2009 -access +rwc -nowarn UEXPSC -lwdgen -sv -uvm -uvmhome CDNS-1.2-ML \
+# 	-timescale 1ns/1ps "+define+CVA6_ASSERT_ON" -nowarn CLSMIP -nowarn DLCPTH -nowarn UEXPSC -nowarn COVSEC -nowarn TSNSPK -nowarn COVVPO -neverwarn \
+# 	-nowarn COVEOS -nowarn SPDUSD -nowarn COVNSO -nowarn COVCGN -nowarn CGPIZE -nowarn CGPIDF -nowarn CGNSWA -quiet +define+NO_PULP  \
+# 	+define+CVA6_TRACE_EXECUTION +define+UVM +incdir+/root/Documents/core-v-verif/cva6/env/uvme +incdir+/root/Documents/core-v-verif/cva6/tb/uvmt \
+# 	/root/Documents/core-v-verif/cva6/tb/uvmt/uvmt_cva6_macros.sv -f $(FLIST_CORE) \
+# 	-f /root/Documents/core-v-verif/cva6/tb/uvmt/uvmt_cva6.flist 	\
+# 	-top uvmt_cva6_tb 
+
+vcs_uvm_comp: dpi_build_xcelium
 	@echo "[VCS] Building Model"
 	mkdir -p $(VCS_WORK_DIR)
 	cd $(VCS_WORK_DIR) && vcs $(ALL_UVM_FLAGS) \
@@ -239,11 +315,15 @@ vcs_clean_all:
 	@echo "[VCS] Cleanup (entire vcs_work dir)"
 	rm -rf $(CORE_V_VERIF)/cva6/sim/vcs_results/ verdiLog/ simv* *.daidir *.vpd *.fsdb *.db csrc ucli.key vc_hdrs.h novas* inter.fsdb uart
 
+xrun_clean_all:
+	@echo "[XRUN] Cleanup (entire xcelium_work dir)"
+	rm -rf $(CORE_V_VERIF)/cva6/sim/xcelium_results/ verdiLog/ simv* *.daidir *.vpd *.fsdb *.db csrc ucli.key vc_hdrs.h novas* inter.fsdb uart
+
 ###############################################################################
 # Common targets and rules
 ###############################################################################
 
-clean_all: vcs_clean_all
+clean_all: vcs_clean_all xrun_clean_all
 	rm -f *.txt
 	rm -f trace*.log
 	rm -f trace*.dasm
