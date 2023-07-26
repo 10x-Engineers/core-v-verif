@@ -147,12 +147,21 @@
     add      TMP, TMP, VA                                   ;\
     SREG     PA,  0(TMP)                                    ;
 
-#define SATP_SETUP_SV32                                     ;\
-    la   t6,   pgtb_le1                                     ;\
-    li   t5,   SATP32_MODE                                  ;\
-    srli t6,   t6, 12                                       ;\
-    or   t6,   t6, t5                                       ;\
-    WRITE_CSR(satp, t6)                                     ;
+
+#define SATP_SV32(SATP32_MODE,pgtb_address,asid)            ;\
+    .if (SATP32_MODE==1)                                    ;\
+        srli t6,   pgtb_address, 12                         ;\
+        slli t5,   asid        , 22                         ;\
+        or   t6,   t6          , t5                         ;\
+        li   t4,   0x1                                      ;\
+        slli t5,   t4   , 31                                ;\
+        or   t6,   t6          , t5                         ;\
+        WRITE_CSR(satp, t6)                                 ;\
+    .endif                                                  ;\
+    .if (SATP32_MODE==0)                                    ;\
+        li t6,0x00000000                                    ;\
+        WRITE_CSR(satp, t6)                                 ;\
+    .endif                                                  ;
 
 #define EXIT_LOGIC(REG, VAL)                                ;\
     SREG VAL, 0(REG)                                        ;
@@ -182,3 +191,4 @@
     CLEAR_CSR (sstatus,t0)            ;\
     WRITE_CSR (sepc,SEPC_ADDR)        ;\
     sret                              ;
+    
