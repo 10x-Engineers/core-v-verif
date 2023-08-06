@@ -4,9 +4,9 @@
 .globl rvtest_entry_point
 rvtest_entry_point:
     # BitFields
-    # MODE:S_MODE LEVEL(PTE):0, R(PTE):0, W(PTE):0, X(PTE):1, XA(PTE):1, A(PTE):1
+    # MODE:PRV_S LEVEL(PTE):0, R(PTE):0, W(PTE):0, X(PTE):1, XA(PTE):1, A(PTE):1
     #TEST_MXR_UNSET(0x02, 0, 0, 0, 1, 1, 1)
-    TEST_VM_FEATURES(S_MODE, LEVEL0, 0, 0, 0, VM_MXR_UNSET_TEST)
+    TEST_VM_FEATURES(PRV_S, LEVEL0, 0, 0, 0, VM_MXR_UNSET_TEST)
 
 
 #ifdef Test_Access_Bit
