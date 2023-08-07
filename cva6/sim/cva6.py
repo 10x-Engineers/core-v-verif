@@ -1219,7 +1219,7 @@ def main():
     sys.exit(130)
 
 if __name__ == "__main__":
-  sys.path.append(os.getcwd()+"/../../core-v-cores/cva6/util")
+  sys.path.append(os.getcwd()+"/../../core-v-cores/cva6")
   from config_pkg_generator import *
   main()
 
