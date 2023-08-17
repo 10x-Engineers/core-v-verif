@@ -1,18 +1,16 @@
 #################################################################################################           
-#                                                                                               #
 # Verification Goal: Set PTE.D = 0 and test the Write access at Supervisor Level                #
 #                                                                                               #
-# Description:       Store/AMO fault on write access                                            #
-#                                                                                               #
-#################################################################################################
-#                                                                                               #
-# Sub Feature:          Dirty Bit Implementation                                                #                
-#                                                                                               #   
-# Feature Description:  If implementation does not sets the pte.D when PTE is written,          #
+# Description: 			If implementation does not sets the pte.D when PTE is written,          #
 #                       and PTE has pte.D=0, then attempting to store on that PTE would         #
-#                       raise Store/AMO page fault exception.                                   #    
-#                                                                                               #                                                                                               #
+#                       raise Store/AMO page fault exception.                                   #                                                                                             #
 #################################################################################################   
+
+#-----------------------------------------------#
+#  	PTE setup -- Level 1, user mode				#
+#  			No dirty permission				    #
+#	expected  --	Store/AMO Page fault		#
+#-----------------------------------------------#
 
 #include "model_test.h"
 #include "custom_macros1.h"
@@ -50,29 +48,19 @@ main:
 #-------------------Adresses--------------------#
 	.set va,		0x90000000                  #           Page table level 1  VA   
 	.set pa,		0x80000000                  #           rvtest_entry_point physical address
-	.set va_data,	0x90011000                  #           rvtest_data Virtual address set at level 0 
-#-----------------------------------------------#
-
-#-----------------------------------------------#
-#  PTE setup -- Level 0, supervisor mode		#
-#  No dirty permission						    #
+	.set va_data,	0x91000000                  #           rvtest_data Virtual address set at level 0 
 #-----------------------------------------------#
 
 #------------------------------------------------------PTE setup--------------------------------------------------------------
-    #PTE SETUP at level 1 -- Base address of PGtable stored in the PTE
-	LA a0, rvtest_slvl1_pg_tbl
-    LI a1, (PTE_V)                                          # Valid permission only--> point at level 0 page table
-	PTE_SETUP_RV32(a0, a1, t0, t1, va, 1)
+    #PTE SETUP at level 1 -- rvtest_entry_point physical address stored
+	LI a0, pa														
+	LI a1, (PTE_D | PTE_A | PTE_U | PTE_G | PTE_X | PTE_W | PTE_R | PTE_V)  
+	PTE_SETUP_RV32(a0, a1, t0, t1, va, LEVEL1)
 
-    #PTE SETUP at level 0 -- rvtest_entry_point physical address stored
-	LI a0, pa
-	LI a1, (PTE_D | PTE_A | PTE_G | PTE_X | PTE_W | PTE_R | PTE_V)  
-	PTE_SETUP_RV32(a0, a1, t0, t1, va, 0)
-
-    #PTE SETUP at level 0 -- rvtest_data physical address stored
+    #PTE SETUP at level 1 -- rvtest_data physical address stored
 	LA (a0, rvtest_data)
-	LI a1, (PTE_A | PTE_G | PTE_X | PTE_W | PTE_V)  #dirty bit not set
-	PTE_SETUP_RV32(a0, a1, t0, t1, va_data, 0)
+	LI a1, (PTE_A | PTE_G | PTE_U | PTE_R | PTE_X | PTE_W | PTE_V)  #dirty bit not set
+	PTE_SETUP_RV32(a0, a1, t0, t1, va_data, LEVEL1)
 #-----------------------------------------------------------------------------------------------------------------------------
 
 #---------------satp mode setup-----------------#
@@ -97,22 +85,22 @@ main:
 	
 	LREG t1, code_bgn_off+0*sv_area_sz(sp)
 	add t2, t1, t0
-	SREG t2, code_bgn_off+1*sv_area_sz(sp)
+	SREG t2, code_bgn_off+2*sv_area_sz(sp)
 
 	/******* data *******/
 	// update save area
 	LREG t1, data_bgn_off+0*sv_area_sz(sp)
 	add  t2, t1,t0
-	SREG t2, data_bgn_off+1*sv_area_sz(sp)
+	SREG t2, data_bgn_off+2*sv_area_sz(sp)
 	//signature
 	LREG t1, sig_bgn_off+0*sv_area_sz(sp)
 	add t2, t1, t0
-	SREG t2, sig_bgn_off+1*sv_area_sz(sp) 
+	SREG t2, sig_bgn_off+2*sv_area_sz(sp) 
 
 	sfence.vma
 #-----------------------------------------------------------------------------------------------------------------------------
 
-	RVTEST_GOTO_LOWER_MODE	Smode		                   # Switching to S mode
+	RVTEST_GOTO_LOWER_MODE	Umode		                   # Switching to U mode
 
 #-----------------------------------------------------------------------------------------------------------------------------
 vm_en:
