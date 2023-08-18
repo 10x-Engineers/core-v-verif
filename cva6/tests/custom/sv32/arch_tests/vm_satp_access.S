@@ -1,12 +1,12 @@
-# ###############################################################################################           
-# Verification Goal: SATP is accessible only in M and S mode not in U mode						#
-#                                                                                               #
-# Description:       Satp is only accessible in M and S mode and illegal instruction          	#
-#                    exception is generated when accessed in lower privilege mode             	#
-# ###############################################################################################   
+# ###########################################################################################      
+# Verification Goal: SATP is accessible only in M and S mode not in U mode			#
+#                                                                                    	#
+# Description:       Satp is only accessible in M and S mode and illegal instruction	#
+#                    exception is generated when accessed in lower privilege mode    	#
+# ###########################################################################################   
 
 #include "model_test.h"
-#include "custom_macros1.h"
+#include "test_custom_macros.h"
 #include "arch_test.h"
 
 RVTEST_ISA("RV32I_Zicsr")
@@ -37,6 +37,10 @@ main:
 	ALL_MEM_PMP          								# set the PMP permissions
 	WRITE_CSR (satp,x0)  								# write satp with all zeros (bare mode)
 
+	.set va,      0x90000000
+	.set pa,      0x80000000 
+	.set va_data, 0x91000000
+
 	/* Save Virtual addresses in of Code and Data 
 	in their respective S-mode save area */
 
@@ -44,7 +48,7 @@ main:
 
 	LI (t0, va)
 	LI (t1, pa)
-	sub t0, t0, t1   									# (VA-PA) Note: VA > PA 
+	sub t0, t0, t1   							 	# (VA-PA) Note: VA > PA 
 	csrr sp, mscratch
 	add t1,sp,t0
 	csrw sscratch, t1 
@@ -57,15 +61,15 @@ main:
     SET_CSR   (satp,s2)
     WRITE_CSR (satp,s3)
 
-	RVTEST_GOTO_LOWER_MODE Smode					    # changes mode from M to S
+	RVTEST_GOTO_LOWER_MODE Smode					    		# changes mode from M to S
 
     CLEAR_CSR (satp,s1)
     SET_CSR   (satp,s2)
     WRITE_CSR (satp,s3)
 
-	RVTEST_GOTO_LOWER_MODE Umode						# changes mode from S to U
-
-	CLEAR_CSR (satp,s1)								    # Illegal instruction exception is generated when accessed in U mode 
+	RVTEST_GOTO_LOWER_MODE Umode							# changes mode from S to U
+	
+	CLEAR_CSR (satp,s1)								# Illegal instruction exception is generated when accessed in U mode 
     SET_CSR   (satp,s2)
     WRITE_CSR (satp,s3)
 
@@ -92,7 +96,7 @@ vm_en:
 	LI (a4, 0x123)
 	RVTEST_SIGUPD(x13,a4)
 mmode:
-	LI (t2, 0xabab)									# Verification if handler is returning and SIGUPD is working afer the handler
+	LI (t2, 0xabab)								# Verification if handler is returning and SIGUPD is working afer the handler
 	csrw pmpaddr1, t2								# If in M-mode, this instruction will work otherwise not.
 	csrr a4, pmpaddr1
 	RVTEST_SIGUPD(x13,a4)
@@ -137,3 +141,4 @@ sig_end_canary:
 CANARY;
 rvtest_sig_end:
 RVMODEL_DATA_END
+
