@@ -41,7 +41,7 @@ main:
 
 	.set va,   0x90000000
 	.set pa,   0x80000000 
-	.set va_1, 0x91000000
+	.set va_data, 0x91000000
                                              				    # PTE setup for Instruction memory 0x90000000 -> 0x80000000
 	LA (a0, pa)                                               # loads the address in a0
 	LI a1, ( PTE_D | PTE_A | PTE_U  | PTE_X | PTE_W | PTE_R )   # sets the permission bits
@@ -49,7 +49,7 @@ main:
 														        # PTE setup for rvtest_data 0x91000000 -> rvtest_data	
 	LA (a0, rvtest_data)                                        # loads the address of label rvtest_data in a0
 	LI a1, ( PTE_D | PTE_A | PTE_U | PTE_X | PTE_W | PTE_R )    # sets the permission bits (PTE_V == 0)
-	PTE_SETUP_RV32(a0, a1, t0, t1, va_1, LEVEL1)                # setup the PTE for level1
+	PTE_SETUP_RV32(a0, a1, t0, t1, va_data, LEVEL1)                # setup the PTE for level1
 
     SATP_SETUP_SV32                                             # set the SATP for virtualization
 
