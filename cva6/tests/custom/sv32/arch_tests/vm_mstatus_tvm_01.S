@@ -1,8 +1,8 @@
 #################################################################################################           
-# Verification Goal: Reserved RWX permission test                                               #
+# Verification Goal:  Test for mstatus.tvm = 1                                    	            #
 #                                                                                               #
-# Feature Description:  If PTE has reserved RWX encodings (pte.w=1 & pte.r=0), then accessing   #
-#                       it would raise page fault exception of the corresponding access type.   #
+# Description:		  If mstatus.TVM=1, read and write access to the satp and					#			
+#					  sfence.vma will raise illegal instruction exception in S-mode.			#
 #################################################################################################   
 
 #-----------------------------------------------#
