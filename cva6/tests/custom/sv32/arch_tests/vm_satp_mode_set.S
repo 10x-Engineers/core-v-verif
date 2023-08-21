@@ -1,15 +1,14 @@
 #################################################################################################           
-# Verification Goal: Reserved RWX permission test                                               #
+# Verification Goal: Test for satp mode field set                                               #
 #                                                                                               #
-# Feature Description:  If PTE has reserved RWX encodings (pte.w=1 & pte.r=0), then accessing   #
-#                       it would raise page fault exception of the corresponding access type.   #
+# Description:  	 Verification of supported address translation scheme i.e sv32				#
+#					 is selected by writing satp.mode=sv32 and reading back the satp			#
 #################################################################################################   
 
 #-----------------------------------------------#
 #             Read and write Test               #
 #  	PTE setup -- Level 1, supervisor mode		#
-#               mstatus.TVM = 1                 #
-#	expected  --	illegal instruction fault	#
+#	expected  -- Test Pass and satp mode is set	#
 #-----------------------------------------------#
 
 #include "model_test.h"
