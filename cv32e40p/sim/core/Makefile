@@ -490,7 +490,7 @@ testbench_verilator: CV_CORE_pkg $(TBSRC_VERI) $(TBSRC_PKG)
 	@echo "$(BANNER)"
 	$(VERILATOR) --cc --sv --exe \
 		$(VERI_TRACE) \
-		--Wno-lint --Wno-UNOPTFLAT \
+		--Wno-lint --Wno-UNOPTFLAT  --Wno-MULTIDRIVEN  --Wno-COMBDLY\
 		--Wno-MODDUP --top-module \
 		tb_top_verilator $(TBSRC_VERI) \
 		-f $(CV_CORE_MANIFEST) \
